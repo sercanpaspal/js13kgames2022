@@ -1,0 +1,11 @@
+{
+  "name": "game-13kb",
+  "version": "1.0.0",
+  "author": {
+    "email": "sercanpaspal@gmail.com",
+    "name": "Sercan Paspal",
+    "url": "https://sercan.paspal.net"
+  },
+  "dependencies": {
+  }
+}
