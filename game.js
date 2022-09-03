@@ -16,19 +16,11 @@ const isDown = () => INPUTS['s'] || INPUTS['S'] || INPUTS['ArrowDown'];
 const isLeft = () => INPUTS['a'] || INPUTS['A'] || INPUTS['ArrowLeft'];
 const isRight = () => INPUTS['d'] || INPUTS['D'] || INPUTS['ArrowRight'];
 
-const SampleRoom = [
-  [-200, 150],
-  [-200, 50],
-  [-100, 50],
-  [-100, -100],
-  [100, -100],
-  [100, 150],
-];
-
-function drawRoom(points) {
-  return points.map((point, i) => {
-    const nextPointIndex = i + 1 === points.length ? 0 : i + 1;
-    const nextPoint = points[nextPointIndex];
+function drawRoom(room) {
+  const { walls, door, startPoint, nodes } = room;
+  const mappedWalls = walls.map((point, i) => {
+    const nextPointIndex = i + 1 === walls.length ? 0 : i + 1;
+    const nextPoint = walls[nextPointIndex];
     let w = nextPoint[0] - point[0];
     let h = nextPoint[1] - point[1];
     let x = point[0];
@@ -44,6 +36,11 @@ function drawRoom(points) {
     w += w !== 0 ? 5 : 0;
     return new Wall(x, y, w || 5, h || 5)
   });
+
+  player.pos.x = startPoint[0];
+  player.pos.y = startPoint[1];
+
+  NODES = [player, ...mappedWalls, new Door(...door), ...nodes];
 }
 
 function isColl(n1, n2){
@@ -132,6 +129,14 @@ class Node {
 class Wall extends Node {
   render(){
     ctx.fillStyle = "#000000";
+    ctx.fillRect(this.getPos().x, this.getPos().y, this.w, this.h);
+  }
+}
+
+class Door extends Wall {
+  render() {
+    ctx.fillStyle = "#00FF00";
+    createRect(this.getPos().x, this.getPos().y, this.w, this.h);
     ctx.fillRect(this.getPos().x, this.getPos().y, this.w, this.h);
   }
 }
@@ -251,7 +256,6 @@ class Player extends X {
   constructor() {
     super(0, 0, 10, 20);
     this.speed = 3;
-    this.attack = false;
     this.jump = false;
     this.q = false;
   }
@@ -263,11 +267,6 @@ class Player extends X {
     if (isDown()) this.pos.y += speed;
     if (isLeft()) this.pos.x -= speed;
     if (isRight()) this.pos.x += speed;
-    if (INPUTS['MouseDown'] && !this.attack) {
-      this.attack = true;
-      this.onAttack();
-      setTimeout(() => this.attack = false, 1000)
-    }
 
     if (INPUTS[' '] && !this.jump) {
       this.jump = true;
@@ -282,10 +281,6 @@ class Player extends X {
       setTimeout(() => this.q = false, 1000);
       NODES.push(new Magic());
     }
-  }
-
-  onAttack() {
-    console.log("attack");
   }
 
   getPos() {
@@ -305,15 +300,36 @@ class Player extends X {
   render(){
     super.render()
     createRect(this.getPos().x, this.getPos().y, this.w, this.h);
-    if (this.attack) ctx.fillText("Attack!", this.getPos().x, this.getPos().y);
+  }
+
+  onCollision(node) {
+    super.onCollision(node);
+
+    if (node instanceof Door) {
+      drawRoom(SampleRoom)
+    }
   }
 }
 
+const SampleRoom = {
+  walls: [
+    [-200, 150],
+    [-200, 50],
+    [-100, 50],
+    [-100, -100],
+    [100, -100],
+    [100, 150],
+  ],
+  door: [-25, -105, 50, 15],
+  startPoint: [-150, 95],
+  nodes: [
+    new Monster(0, -75)
+  ]
+};
+
 player = new Player();
 
-NODES.push(...drawRoom(SampleRoom))
-NODES.push(new Monster(50, 50));
-NODES.push(player);
+drawRoom(SampleRoom);
 
 const loop = () => {
   ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
