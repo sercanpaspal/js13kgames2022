@@ -16,6 +16,36 @@ const isDown = () => INPUTS['s'] || INPUTS['S'] || INPUTS['ArrowDown'];
 const isLeft = () => INPUTS['a'] || INPUTS['A'] || INPUTS['ArrowLeft'];
 const isRight = () => INPUTS['d'] || INPUTS['D'] || INPUTS['ArrowRight'];
 
+const SampleRoom = [
+  [-200, 150],
+  [-200, 50],
+  [-100, 50],
+  [-100, -100],
+  [100, -100],
+  [100, 150],
+];
+
+function drawRoom(points) {
+  return points.map((point, i) => {
+    const nextPointIndex = i + 1 === points.length ? 0 : i + 1;
+    const nextPoint = points[nextPointIndex];
+    let w = nextPoint[0] - point[0];
+    let h = nextPoint[1] - point[1];
+    let x = point[0];
+    let y = point[1];
+    if (w < 0) {
+      w = Math.abs(w);
+      x -= w;
+    }
+    if (h < 0) {
+      h = Math.abs(h);
+      y -= h;
+    }
+    w += w !== 0 ? 5 : 0;
+    return new Wall(x, y, w || 5, h || 5)
+  });
+}
+
 function isColl(n1, n2){
   var l1 = n1.pos.x;
   var t1 = n1.pos.y;
@@ -219,7 +249,7 @@ class Magic extends Node {
 
 class Player extends X {
   constructor() {
-    super(1, 1, 10, 20);
+    super(0, 0, 10, 20);
     this.speed = 3;
     this.attack = false;
     this.jump = false;
@@ -281,12 +311,7 @@ class Player extends X {
 
 player = new Player();
 
-NODES.push(new Wall(-100, 100, 5, 200));
-NODES.push(new Wall(0, 100, 5, 200));
-NODES.push(new Wall(-100, 300, 105, 5));
-NODES.push(new Wall(100, 100, 5, 200));
-NODES.push(new Wall(200, 100, 5, 200));
-NODES.push(new Wall(100, 300, 105, 5));
+NODES.push(...drawRoom(SampleRoom))
 NODES.push(new Monster(50, 50));
 NODES.push(player);
 
