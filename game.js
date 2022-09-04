@@ -7,8 +7,8 @@ let NODES = [];
 let MOUSE = { x: 0, y: 0 }
 window.addEventListener('keydown', e => INPUTS[e.key] = true);
 window.addEventListener('keyup', e => INPUTS[e.key] = false);
-window.addEventListener('mousedown', e => INPUTS["MouseDown"] = true);
-window.addEventListener('mouseup', e => INPUTS["MouseDown"] = false);
+window.addEventListener('mousedown', () => INPUTS["MouseDown"] = true);
+window.addEventListener('mouseup', () => INPUTS["MouseDown"] = false);
 canvas.addEventListener('mousemove', e => MOUSE = { x: e.clientX, y: e.clientY });
 
 const isUp = () => INPUTS['w'] || INPUTS['W'] || INPUTS['ArrowUp'];
@@ -40,23 +40,21 @@ function drawRoom(room) {
   player.pos.x = startPoint[0];
   player.pos.y = startPoint[1];
 
-  NODES = [player, ...mappedWalls, new Door(...door), ...nodes];
+  NODES = [player, ...mappedWalls, new Door(...door), ...nodes.map(n => n())];
 }
 
 function isColl(n1, n2){
-  var l1 = n1.pos.x;
-  var t1 = n1.pos.y;
-  var r1 = l1 + n1.w;
-  var b1 = t1 + n1.h;
+  const l1 = n1.pos.x;
+  const t1 = n1.pos.y;
+  const r1 = l1 + n1.w;
+  const b1 = t1 + n1.h;
 
-  var l2 = n2.pos.x;
-  var t2 = n2.pos.y;
-  var r2 = l2 + n2.w;
-  var b2 = t2 + n2.h;
+  const l2 = n2.pos.x;
+  const t2 = n2.pos.y;
+  const r2 = l2 + n2.w;
+  const b2 = t2 + n2.h;
 
-  if (b1 < t2 || t1 > b2 || r1 < l2 || l1 > r2)
-    return false;
-  return true;
+  return !(b1 < t2 || t1 > b2 || r1 < l2 || l1 > r2);
 }
 
 function getDistance(pos1, pos2){
@@ -81,15 +79,15 @@ function createRect(x, y, w, h) {
 const calculateCollision = node => {
   for(let i = 0;i < NODES.length;i++){
     let otherNode = NODES[i];
-    if(node.constructor.name!==otherNode.constructor.name && otherNode.collidable){
+    if(node!==otherNode && otherNode.collidable){
       isColl(node, otherNode) ? node.onCollision(otherNode) : node.onCollisionExit(otherNode);
     }
   }
 }
 
 const getMousePos = () => ({
-  x: MOUSE.x - player.getCanvasPos().x,
-  y: MOUSE.y - player.getCanvasPos().y
+  x: MOUSE.x - window.innerWidth / 2,
+  y: MOUSE.y - window.innerHeight / 2
 })
 
 class Node {
@@ -148,7 +146,7 @@ class X extends Node {
   }
 
   onCollision(node) {
-    if (node instanceof Wall){
+    if (node instanceof Wall || node instanceof X){
       const x = this.pos.x;
       this.pos.x = this.beforePosition.x;
       if (isColl(this, node)) {
@@ -184,10 +182,17 @@ class Monster extends X {
     const angle = getAngle(player.getCenterPos(), this.getCenterPos());
     const distance = getDistance(player.getCenterPos(), this.getCenterPos());
 
-    if (distance < (player.h + 5) || distance > 200) return
+    if (distance > 200) return;
 
-    this.pos.x += Math.cos(angle/180*Math.PI) * this.speed;
-    this.pos.y += Math.sin(angle/180*Math.PI) * this.speed;
+    let direction = 0;
+    if (distance < 35) {
+      direction = player.speed * -1;
+    } else if (distance > 40) {
+      direction = 1
+    }
+
+    this.pos.x += Math.cos(angle/180*Math.PI) * this.speed * direction;
+    this.pos.y += Math.sin(angle/180*Math.PI) * this.speed * direction;
   }
 
   render() {
@@ -213,7 +218,7 @@ class Magic extends Node {
     this.sin = Math.sin(this.angle/180*Math.PI);
 
     if (this.isGuide) {
-      this.angle = getAngle(player.getCenterPos(), getMousePos());
+      this.angle = getAngle({ x: 0, y: 0 }, getMousePos());
       this.pos.x = player.pos.x + player.w / 2;
       this.pos.y = player.pos.y + player.h / 2;
     } else {
@@ -323,7 +328,9 @@ const SampleRoom = {
   door: [-25, -105, 50, 15],
   startPoint: [-150, 95],
   nodes: [
-    new Monster(0, -75)
+    () => new Monster(0, -75),
+    () => new Monster(0, 0),
+    () => new Monster(0, 75),
   ]
 };
 
@@ -332,7 +339,7 @@ player = new Player();
 drawRoom(SampleRoom);
 
 const loop = () => {
-  ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
   for(let i = 0;i < NODES.length;i++){
     const node = NODES[i];
     node.update();
