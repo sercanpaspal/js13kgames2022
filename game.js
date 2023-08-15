@@ -139,14 +139,14 @@ class Door extends Wall {
   }
 }
 
-class X extends Node {
+class Body extends Node {
   constructor(...props) {
     super(...props);
     this.health = 100;
   }
 
   onCollision(node) {
-    if (node instanceof Wall || node instanceof X){
+    if (node instanceof Wall || node instanceof Body){
       const x = this.pos.x;
       this.pos.x = this.beforePosition.x;
       if (isColl(this, node)) {
@@ -172,7 +172,7 @@ class X extends Node {
   }
 }
 
-class Monster extends X {
+class Monster extends Body {
   constructor(x, y) {
     super(x, y, 20, 20);
   }
@@ -199,6 +199,7 @@ class Monster extends X {
     super.render();
     ctx.fillStyle = "#FF0000";
     ctx.fillRect(this.getPos().x, this.getPos().y, this.w, this.h);
+    createRect(this.getPos().x, this.getPos().y, this.w, this.h);
   }
 }
 
@@ -257,7 +258,7 @@ class Magic extends Node {
   }
 }
 
-class Player extends X {
+class Player extends Body {
   constructor() {
     super(0, 0, 10, 20);
     this.speed = 3;
