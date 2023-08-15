@@ -317,6 +317,20 @@ class Player extends Body {
   }
 }
 
+class Text extends Node {
+  constructor(text, x, y, fontSize = '32px') {
+    super(x, y);
+    this.text = text;
+    this.fontSize = fontSize;
+  }
+
+  render() {
+    ctx.font = `${this.fontSize} Arial`;
+    ctx.fillStyle = "#000000";
+    ctx.fillText(this.text, this.getPos().x, this.getPos().y);
+  }
+}
+
 const SampleRoom = {
   walls: [
     [-200, 150],
@@ -332,6 +346,10 @@ const SampleRoom = {
     () => new Monster(0, -75),
     () => new Monster(0, 0),
     () => new Monster(0, 75),
+    () => new Text("Press Q to use skill!", -190, 200),
+    () => new Text("I started to make this game for the 2023 13KB game challange.", -240, -140, '11px'),
+    () => new Text("I couldn't finish it because I didn't have enough time :/", -240, -128, '11px'),
+    () => new Text("I imagined a game in the rogue like genre where you can progress through rooms and improve your skills with the resources you collect.", -240, -116, '11px')
   ]
 };
 
